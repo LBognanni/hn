@@ -56,23 +56,28 @@ body {
   letter-spacing: -0.02em;
   flex-shrink: 0;
 }
-.tabs { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; }
-.tab {
+#date-nav { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+#date-label {
+  font-size: 0.68rem;
+  color: var(--text2);
+  letter-spacing: 0.04em;
+  min-width: 90px;
+  text-align: center;
+}
+.nav-btn {
   font-family: var(--mono);
-  font-size: 0.6rem;
-  font-weight: 500;
-  padding: 4px 7px;
+  font-size: 0.75rem;
+  padding: 4px 9px;
   border: 1px solid var(--border);
   border-radius: var(--r);
   background: transparent;
   color: var(--text2);
   cursor: pointer;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.1s;
 }
-.tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.nav-btn:active { background: var(--bg2); }
+.nav-btn:disabled { opacity: 0.25; cursor: default; }
 
 /* PTR */
 #ptr {
@@ -93,25 +98,6 @@ body {
 }
 #ptr.loading .ptr-spin { display: block; }
 
-/* FILTER BAR */
-#filter-bar {
-  padding: 7px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
-  font-size: 0.62rem; color: var(--text2);
-  letter-spacing: 0.05em; text-transform: uppercase;
-}
-#score-filter {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  padding: 3px 8px;
-  border-radius: var(--r);
-  width: 60px;
-}
-#story-count { margin-left: auto; color: var(--text3); }
 
 /* FEED */
 #feed { padding-bottom: calc(24px + var(--safe-bot)); }
@@ -335,12 +321,10 @@ body {
 
 <div id="header">
   <div id="logo">HN</div>
-  <div class="tabs">
-    <button class="tab active" data-feed="front_page">top</button>
-    <button class="tab" data-feed="newest">new</button>
-    <button class="tab" data-feed="best">best</button>
-    <button class="tab" data-feed="ask_hn">ask</button>
-    <button class="tab" data-feed="show_hn">show</button>
+  <div id="date-nav">
+    <button class="nav-btn" id="btn-prev">&#x2190;</button>
+    <span id="date-label"></span>
+    <button class="nav-btn" id="btn-next">&#x2192;</button>
   </div>
 </div>
 
@@ -349,11 +333,6 @@ body {
   <span id="ptr-txt">pull to refresh</span>
 </div>
 
-<div id="filter-bar">
-  <label for="score-filter">min pts</label>
-  <input id="score-filter" type="number" value="50" min="0" max="9999" step="10">
-  <span id="story-count"></span>
-</div>
 
 <div id="feed">
   <div id="status"><span class="ico">◌</span>loading…</div>
@@ -379,26 +358,24 @@ const ALGOLIA  = 'https://hn.algolia.com/api/v1';
 const HN_ITEMS = 'https://hacker-news.firebaseio.com/v0/item';
 const CACHE_PFX = 'hn3_';
 const READ_KEY  = 'hn3_read';
-const SCORE_KEY = 'hn3_score';
 
-const FEED_TAGS = {
-  front_page: 'front_page',
-  newest:     'story',
-  best:       'story',
-  ask_hn:     'ask_hn',
-  show_hn:    'show_hn',
+const todayUTC = () => {
+  const d = new Date();
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 };
+const dateKey = d => d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+const fmtDate = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
 
-let currentFeed = 'front_page';
+let currentDay  = todayUTC();
 let stories     = [];
 let readIds     = new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]'));
-let minScore    = parseInt(localStorage.getItem(SCORE_KEY) || '50');
 let busy        = false;
 
 const feedEl    = document.getElementById('feed');
 const statusEl  = document.getElementById('status');
-const scoreEl   = document.getElementById('score-filter');
-const countEl   = document.getElementById('story-count');
+const dateLbl   = document.getElementById('date-label');
+const btnPrev   = document.getElementById('btn-prev');
+const btnNext   = document.getElementById('btn-next');
 const ptrEl     = document.getElementById('ptr');
 const ptrTxt    = document.getElementById('ptr-txt');
 const drawer    = document.getElementById('drawer');
@@ -409,8 +386,6 @@ const dClose    = document.getElementById('d-close');
 const dLink     = document.getElementById('d-link');
 const dScroll   = document.getElementById('d-scroll');
 const offlineEl = document.getElementById('offline');
-
-scoreEl.value = minScore;
 
 const esc = s => String(s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -437,15 +412,13 @@ const cacheGet = k => {
   catch { return null; }
 };
 
-// Algolia returns full story data in a SINGLE request — no per-item fetching
-const fetchStories = async (feedName) => {
-  const tag      = FEED_TAGS[feedName];
-  const sort     = feedName === 'newest' ? 'search_by_date' : 'search';
-  const since    = Math.floor(Date.now()/1000) - 86400; // last 24h
-  const url      = `${ALGOLIA}/${sort}?tags=${tag}&hitsPerPage=60&numericFilters=created_at_i>${since}`;
-  const r    = await fetch(url);
+const fetchStories = async (day) => {
+  const start = day.getTime() / 1000;
+  const end   = start + 86400;
+  const url   = `${ALGOLIA}/search_by_date?tags=story&hitsPerPage=100&numericFilters=created_at_i>=${start},created_at_i<${end}`;
+  const r     = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  const json = await r.json();
+  const json  = await r.json();
   return (json.hits || []).map(h => ({
     id:          parseInt(h.objectID),
     title:       h.title || '(untitled)',
@@ -465,12 +438,9 @@ const showStatus = (ico, msg, isErr) => {
 };
 
 const renderFeed = () => {
-  const filtered = stories
-    .filter(s => s.score >= minScore)
-    .sort((a, b) => b.descendants - a.descendants);
-  countEl.textContent = filtered.length + ' stories';
+  const filtered = stories.slice().sort((a, b) => b.descendants - a.descendants);
   if (!filtered.length) {
-    showStatus('&#x25EF;', `no stories above ${minScore} pts`, false);
+    showStatus('&#x25EF;', 'no stories', false);
     return;
   }
   statusEl.style.display = 'none';
@@ -497,19 +467,23 @@ const renderFeed = () => {
   }).join('');
 };
 
+const updateNav = () => {
+  dateLbl.textContent = fmtDate(currentDay);
+  btnNext.disabled = dateKey(currentDay) >= dateKey(todayUTC());
+};
+
 const load = async () => {
   if (busy) return;
   busy = true;
+  updateNav();
   showStatus('&#x25CC;', 'loading\u2026', false);
-  const cached = cacheGet('s_' + currentFeed);
-  if (cached) {
-    stories = cached;
-    renderFeed();
-  }
+  const key    = 's_' + dateKey(currentDay);
+  const cached = cacheGet(key);
+  if (cached) { stories = cached; renderFeed(); }
   try {
-    const fresh = await fetchStories(currentFeed);
+    const fresh = await fetchStories(currentDay);
     stories = fresh;
-    cacheSet('s_' + currentFeed, fresh);
+    cacheSet(key, fresh);
     renderFeed();
   } catch (err) {
     console.error(err);
@@ -648,21 +622,18 @@ drawer.addEventListener('touchend', e => {
   if (e.changedTouches[0].clientY - tsY > 80 && dScroll.scrollTop === 0) dismissDrawer();
 }, {passive:true});
 
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelector('.tab.active').classList.remove('active');
-    btn.classList.add('active');
-    currentFeed = btn.dataset.feed;
-    stories = [];
-    load();
-  });
+btnPrev.addEventListener('click', () => {
+  currentDay = new Date(currentDay.getTime() - 86400000);
+  stories = [];
+  load();
+});
+btnNext.addEventListener('click', () => {
+  if (btnNext.disabled) return;
+  currentDay = new Date(currentDay.getTime() + 86400000);
+  stories = [];
+  load();
 });
 
-scoreEl.addEventListener('change', () => {
-  minScore = parseInt(scoreEl.value) || 0;
-  localStorage.setItem(SCORE_KEY, minScore);
-  renderFeed();
-});
 
 let ptrY = 0, ptrOn = false, ptrFired = false;
 document.addEventListener('touchstart', e => {
