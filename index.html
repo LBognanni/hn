@@ -42,10 +42,10 @@ body {
 
 /* HEADER */
 #header {
-  position: sticky; top: 0; z-index: 100;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  padding: calc(10px + var(--safe-top)) 14px 10px;
+  border-top: 1px solid var(--border);
+  padding: 10px 14px calc(10px + var(--safe-bot));
   display: flex; align-items: center; gap: 10px;
 }
 #logo {
@@ -100,7 +100,7 @@ body {
 
 
 /* FEED */
-#feed { padding-bottom: calc(24px + var(--safe-bot)); }
+#feed { padding-bottom: calc(64px + var(--safe-bot)); }
 
 .story {
   border-bottom: 1px solid var(--border);
@@ -319,20 +319,10 @@ body {
 </head>
 <body>
 
-<div id="header">
-  <div id="logo">HN</div>
-  <div id="date-nav">
-    <button class="nav-btn" id="btn-prev">&#x2190;</button>
-    <span id="date-label"></span>
-    <button class="nav-btn" id="btn-next">&#x2192;</button>
-  </div>
-</div>
-
 <div id="ptr">
   <div class="ptr-spin"></div>
   <span id="ptr-txt">pull to refresh</span>
 </div>
-
 
 <div id="feed">
   <div id="status"><span class="ico">◌</span>loading…</div>
@@ -348,6 +338,15 @@ body {
   <a id="d-link" target="_blank" rel="noopener noreferrer">&#x2197; open article</a>
   <div id="d-scroll">
     <div id="c-loading">loading comments…</div>
+  </div>
+</div>
+
+<div id="header">
+  <div id="logo">HN</div>
+  <div id="date-nav">
+    <button class="nav-btn" id="btn-prev">&#x2190;</button>
+    <span id="date-label"></span>
+    <button class="nav-btn" id="btn-next">&#x2192;</button>
   </div>
 </div>
 
