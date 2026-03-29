@@ -51,23 +51,23 @@ body {
 #logo {
   font-family: var(--serif);
   font-weight: 300;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--accent);
   letter-spacing: -0.02em;
   flex-shrink: 0;
 }
-#date-nav { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+#date-nav { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
 #date-label {
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   color: var(--text2);
   letter-spacing: 0.04em;
-  min-width: 90px;
+  min-width: 108px;
   text-align: center;
 }
 .nav-btn {
   font-family: var(--mono);
-  font-size: 0.75rem;
-  padding: 4px 9px;
+  font-size: 1rem;
+  padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: var(--r);
   background: transparent;
@@ -100,7 +100,7 @@ body {
 
 
 /* FEED */
-#feed { padding-bottom: calc(64px + var(--safe-bot)); }
+#feed { padding-bottom: calc(90px + var(--safe-bot)); }
 
 .story {
   border-bottom: 1px solid var(--border);
@@ -113,10 +113,10 @@ body {
   animation: fadeUp 0.18s ease both;
 }
 .story:active { background: var(--bg2); }
-.rank { font-size: 0.65rem; color: var(--text3); padding-top: 2px; text-align: right; }
+.rank { font-size: 0.75rem; color: var(--text3); padding-top: 2px; text-align: right; }
 .s-title {
   font-family: var(--serif);
-  font-size: 0.93rem;
+  font-size: 1.08rem;
   font-weight: 300;
   line-height: 1.35;
   margin-bottom: 5px;
@@ -125,14 +125,14 @@ body {
 .story.unread .s-title { color: var(--text); }
 .domain {
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   color: var(--text3);
   margin-left: 5px;
   vertical-align: middle;
   font-weight: 400;
 }
 .s-meta {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--text2);
   display: flex; flex-wrap: wrap; gap: 0 9px;
   line-height: 1.7;
@@ -140,7 +140,7 @@ body {
 .pts { color: var(--accent); font-weight: 500; }
 .cmt-btn {
   background: none; border: none;
-  font-family: var(--mono); font-size: 0.6rem;
+  font-family: var(--mono); font-size: 0.72rem;
   color: var(--link); cursor: pointer; padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
@@ -190,7 +190,7 @@ body {
 }
 #d-title {
   font-family: var(--serif);
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 300;
   line-height: 1.3;
   margin-bottom: 4px;
@@ -203,20 +203,20 @@ body {
 }
 #d-title[href]:hover { text-decoration: underline; text-decoration-color: var(--text3); }
 #d-title[href] { cursor: pointer; }
-#d-meta { font-size: 0.58rem; color: var(--text2); display: flex; gap: 8px; }
+#d-meta { font-size: 0.68rem; color: var(--text2); display: flex; gap: 8px; }
 #d-close {
   position: absolute; top: 10px; right: 12px;
   background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text2); font-family: var(--mono); font-size: 0.65rem;
-  width: 26px; height: 26px; border-radius: var(--r);
+  color: var(--text2); font-family: var(--mono); font-size: 0.75rem;
+  width: 30px; height: 30px; border-radius: var(--r);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
 #d-link {
   display: block;
   margin: 8px 14px 0;
-  padding: 5px 8px;
-  font-size: 0.62rem;
+  padding: 7px 10px;
+  font-size: 0.75rem;
   color: var(--link);
   text-decoration: none;
   background: var(--bg2);
@@ -253,9 +253,9 @@ body {
   padding-left: calc(var(--d) * 13px);
   user-select: none;
 }
-.c-by { font-size: 0.6rem; font-weight: 500; color: var(--accent); }
+.c-by { font-size: 0.72rem; font-weight: 500; color: var(--accent); }
 .c-by.op { color: var(--green); }
-.c-age { font-size: 0.57rem; color: var(--text3); }
+.c-age { font-size: 0.68rem; color: var(--text3); }
 .comment {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -264,7 +264,7 @@ body {
 .c-body {
   padding-left: calc(var(--d) * 13px);
   font-family: var(--serif);
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 300;
   line-height: 1.55;
   color: var(--text);
@@ -283,7 +283,7 @@ body {
 .comment.col .c-body { display: none; }
 .c-col-info {
   padding-left: calc(var(--d) * 13px);
-  font-size: 0.56rem; color: var(--text3); margin-top: 1px;
+  font-size: 0.68rem; color: var(--text3); margin-top: 1px;
   display: none;
 }
 .comment.col .c-col-info { display: block; }
