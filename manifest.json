@@ -2,7 +2,7 @@
   "name": "HN Reader",
   "short_name": "HN",
   "description": "Lean Hacker News PWA reader",
-  "start_url": "/",
+  "start_url": "/hn/",
   "display": "standalone",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",
