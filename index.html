@@ -550,7 +550,7 @@ window.openComments = async (e, id) => {
     dLink.style.display = 'none';
   }
   dScroll.innerHTML = '<div id="c-loading">loading comments\u2026</div>';
-  openDrawer();
+  openDrawer(id);
 
   try {
     // Single Algolia request for ALL comments — replaces the old Firebase waterfall
@@ -624,15 +624,17 @@ window.tog = el => {
   }
 };
 
-const openDrawer = () => {
+const openDrawer = id => {
   drawer.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (id) history.replaceState(null, '', '#' + id);
 };
 const closeDrawer = () => {
   drawer.classList.remove('open');
   overlay.classList.remove('open');
   document.body.style.overflow = '';
+  history.replaceState(null, '', location.pathname + location.search);
 };
 dClose.addEventListener('click', closeDrawer);
 overlay.addEventListener('click', closeDrawer);
@@ -716,7 +718,16 @@ self.addEventListener('fetch',e=>{
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
 
-load();
+const openFromHash = () => {
+  const id = parseInt(location.hash.slice(1));
+  if (id) openComments(null, id);
+};
+
+window.addEventListener('hashchange', () => {
+  if (!location.hash) closeDrawer();
+});
+
+load().then(openFromHash);
 </script>
 </body>
 </html>
