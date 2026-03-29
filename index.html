@@ -628,21 +628,24 @@ const openDrawer = id => {
   drawer.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (id) history.replaceState(null, '', '#' + id);
+  if (id) history.pushState({storyId: id}, '', '#' + id);
 };
 const closeDrawer = () => {
   drawer.classList.remove('open');
   overlay.classList.remove('open');
   document.body.style.overflow = '';
-  history.replaceState(null, '', location.pathname + location.search);
 };
-dClose.addEventListener('click', closeDrawer);
-overlay.addEventListener('click', closeDrawer);
+const dismissDrawer = () => {
+  if (location.hash) history.back();
+  else closeDrawer();
+};
+dClose.addEventListener('click', dismissDrawer);
+overlay.addEventListener('click', dismissDrawer);
 
 let tsY = 0;
 drawer.addEventListener('touchstart', e => { tsY = e.touches[0].clientY; }, {passive:true});
 drawer.addEventListener('touchend', e => {
-  if (e.changedTouches[0].clientY - tsY > 80 && dScroll.scrollTop === 0) closeDrawer();
+  if (e.changedTouches[0].clientY - tsY > 80 && dScroll.scrollTop === 0) dismissDrawer();
 }, {passive:true});
 
 document.querySelectorAll('.tab').forEach(btn => {
@@ -723,8 +726,10 @@ const openFromHash = () => {
   if (id) openComments(null, id);
 };
 
-window.addEventListener('hashchange', () => {
-  if (!location.hash) closeDrawer();
+window.addEventListener('popstate', () => {
+  const id = parseInt(location.hash.slice(1));
+  if (id) openComments(null, id);
+  else closeDrawer();
 });
 
 load().then(openFromHash);
