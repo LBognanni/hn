@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&display=swap');
 
 :root {
-  --bg:      #0d0d0d;
-  --bg2:     #141414;
-  --bg3:     #1c1c1c;
+  --bg:      #1e1e1e;
+  --bg2:     #252526;
+  --bg3:     #2d2d2d;
   --border:  #2a2a2a;
   --accent:  #ff6600;
   --text:    #e8e0d0;
   --text2:   #888;
-  --text3:   #444;
+  --text3:   #666;
   --link:    #c8b89a;
   --green:   #4caf6a;
   --mono:    'JetBrains Mono', monospace;
