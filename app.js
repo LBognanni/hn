@@ -80,7 +80,7 @@ const showStatus = (ico, msg, isErr) => {
   statusEl.innerHTML = `<span class="ico">${ico}</span>${msg}`;
 };
 
-const renderFeed = () => {
+const renderFeed = (animate = true) => {
   const filtered = stories.slice().sort((a, b) => b.descendants - a.descendants);
   if (!filtered.length) {
     showStatus('&#x25EF;', 'no stories', false);
@@ -91,7 +91,7 @@ const renderFeed = () => {
     const isRead = readIds.has(s.id);
     const d      = host(s.url);
     return `<div class="story ${isRead?'read':'unread'}" data-id="${s.id}"
-              style="animation-delay:${Math.min(i*.025,.5)}s"
+              style="${animate ? `animation-delay:${Math.min(i*.025,.5)}s` : 'animation:none'}"
               onclick="storyClick(event,${s.id})">
       <div class="rank">${i+1}</div>
       <div>
@@ -127,7 +127,7 @@ const load = async () => {
     const fresh = await fetchStories(currentDay);
     stories = fresh;
     cacheSet(key, fresh);
-    renderFeed();
+    renderFeed(!cached);
   } catch (err) {
     console.error(err);
     if (!cached) showStatus('&#x2715;', 'failed to load — check connection', true);
@@ -213,7 +213,7 @@ window.openComments = async (e, id) => {
 };
 
 const renderComment = c => `
-  <div class="comment" data-id="${c.id}" data-d="${c.depth}" style="--d:${c.depth}" onclick="tog(this)">
+  <div class="comment" data-id="${c.id}" data-d="${c.depth}" style="--d:${c.depth}" onclick="tog(this,event)">
     <div class="c-head">
       <span class="c-by${c.isOp?' op':''}">${esc(c.by)}${c.isOp?' \u2605':''}</span>
       <span class="c-age">${ago(c.time)}</span>
@@ -222,7 +222,8 @@ const renderComment = c => `
     <div class="c-col-info">thread collapsed</div>
   </div>`;
 
-window.tog = el => {
+window.tog = (el, e) => {
+  if (e && (e.target.closest('a') || window.getSelection().toString())) return;
   const depth = parseInt(el.dataset.d);
   const col   = el.classList.toggle('col');
   let next = el.nextElementSibling;
