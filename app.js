@@ -58,7 +58,7 @@ const cacheGet = k => {
 const fetchStories = async (day) => {
   const start = day.getTime() / 1000;
   const end   = start + 86400;
-  const url   = `${ALGOLIA}/search_by_date?tags=story&hitsPerPage=100&numericFilters=created_at_i>=${start},created_at_i<${end}`;
+  const url   = `${ALGOLIA}/search_by_date?tags=story&hitsPerPage=1000&numericFilters=created_at_i>=${start},created_at_i<${end}`;
   const r     = await fetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const json  = await r.json();
@@ -81,7 +81,7 @@ const showStatus = (ico, msg, isErr) => {
 };
 
 const renderFeed = (animate = true) => {
-  const filtered = stories.slice().sort((a, b) => b.descendants - a.descendants);
+  const filtered = stories.filter(s => s.descendants > 0 || s.score > 0).sort((a, b) => b.descendants - a.descendants);
   if (!filtered.length) {
     showStatus('&#x25EF;', 'no stories', false);
     return;
