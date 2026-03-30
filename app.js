@@ -101,7 +101,7 @@ const fetchComments = async (storyId, storyAuthor) => {
 
   const flat = [];
   const walk = (parentId, depth) => {
-    (childrenOf[parentId] || []).forEach(h => {
+    (childrenOf[parentId] || []).sort((a, b) => a.created_at_i - b.created_at_i).forEach(h => {
       flat.push({
         id:    h.objectID,
         by:    h.author,
