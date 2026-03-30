@@ -6,10 +6,12 @@ const html = htm.bind(h);
 // ── Constants & helpers ─────────────────────────────────────────────
 
 const ALGOLIA   = 'https://hn.algolia.com/api/v1';
-const CACHE_PFX = 'hn3_';
-const READ_KEY  = 'hn3_read';
-const DAY_MS    = 86400000;
-const DAY_S     = 86400;
+const CACHE_PFX     = 'hn3_';
+const READ_KEY      = 'hn3_read';
+const COLLAPSED_PFX = 'hn3_col_';
+const DAY_MS        = 86400000;
+const DAY_S         = 86400;
+const COLLAPSED_TTL = 7 * DAY_MS;
 
 const todayUTC = () => {
   const d = new Date();
@@ -47,6 +49,20 @@ const loadReadIds = () => {
 };
 const saveReadIds = ids => {
   try { localStorage.setItem(READ_KEY, JSON.stringify([...ids])); } catch {}
+};
+
+const loadCollapsed = storyId => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(COLLAPSED_PFX + storyId));
+    if (!raw || Date.now() - raw.ts > COLLAPSED_TTL) return new Set();
+    return new Set(raw.ids);
+  } catch { return new Set(); }
+};
+const saveCollapsed = (storyId, set) => {
+  try {
+    if (set.size === 0) localStorage.removeItem(COLLAPSED_PFX + storyId);
+    else localStorage.setItem(COLLAPSED_PFX + storyId, JSON.stringify({ ids: [...set], ts: Date.now() }));
+  } catch {}
 };
 
 // ── API ─────────────────────────────────────────────────────────────
@@ -261,11 +277,14 @@ function Comment({ comment, collapsed, onToggle }) {
     </div>`;
 }
 
-function CommentList({ comments }) {
-  const [collapsed, setCollapsed] = useState(new Set());
+function CommentList({ comments, storyId }) {
+  const [collapsed, setCollapsed] = useState(() => loadCollapsed(storyId));
 
-  // Reset collapsed state when comments change
-  useEffect(() => setCollapsed(new Set()), [comments]);
+  // Load persisted collapsed state when story changes
+  useEffect(() => { setCollapsed(loadCollapsed(storyId)); }, [storyId]);
+
+  // Persist collapsed state
+  useEffect(() => { if (storyId) saveCollapsed(storyId, collapsed); }, [storyId, collapsed]);
 
   const toggle = useCallback((id) => {
     setCollapsed(prev => {
@@ -331,7 +350,7 @@ function Drawer({ storyId, story, comments, onClose, drawerRef }) {
           ${'\u2197 ' + (d || 'open article')}
         </a>` : null}
       <div id="d-scroll">
-        <${CommentList} comments=${comments} />
+        <${CommentList} comments=${comments} storyId=${storyId} />
       </div>
     </div>`;
 }
