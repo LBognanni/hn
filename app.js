@@ -96,7 +96,7 @@ const renderFeed = (animate = true) => {
       <div class="rank">${i+1}</div>
       <div>
         <div class="s-title">${isRead?'':'<span class="dot"></span>'}${esc(s.title)}${
-          d?`<span class="domain">${esc(d)}</span>`:''}</div>
+          d?` <span class="domain">${esc(d)}</span>`:''}</div>
         <div class="s-meta">
           <span class="pts">&#x25B2; ${s.score}</span>
           <span>${ago(s.time)}</span>
