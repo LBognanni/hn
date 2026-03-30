@@ -1,8 +1,8 @@
 {
-  "name": "HN Reader",
-  "short_name": "HN",
+  "name": "hnws.app",
+  "short_name": "hnws",
   "description": "Lean Hacker News PWA reader",
-  "start_url": "/hn/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",

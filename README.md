@@ -4,7 +4,7 @@ A **very** minimal Hacker News reader built for mobile. Install it to your home 
 
 View it live:
 
-### 👉️ https://lbognanni.github.io/hn/ 👈️
+### 👉️ https://hnws.app/ 👈️
 
 ## Features
 - View the top stories of the day, sorted by number of comments
