@@ -402,6 +402,7 @@ function App() {
 
   const animateRef    = useRef(true);
   const drawerRef     = useRef(null);
+  const dismissingRef = useRef(false);
   const ptrYRef       = useRef(0);
   const ptrOnRef      = useRef(false);
   const ptrFiredRef   = useRef(false);
@@ -485,10 +486,10 @@ function App() {
   }, [stories, currentDay]);
 
   const dismissDrawer = useCallback(() => {
+    dispatch({ type: 'CLOSE_DRAWER' });
     if (drawerOwnsHistory) {
+      dismissingRef.current = true;
       history.back();
-    } else {
-      dispatch({ type: 'CLOSE_DRAWER' });
     }
   }, [drawerOwnsHistory]);
 
@@ -563,6 +564,7 @@ function App() {
   // ── Popstate ──────────────────────────────────────────────────
   useEffect(() => {
     const handler = () => {
+      if (dismissingRef.current) { dismissingRef.current = false; return; }
       const { date, storyId } = parseHash();
       const newDay = date ? new Date(date + 'T00:00:00Z') : todayUTC();
       if (dateKey(newDay) !== dateKey(currentDay)) {
