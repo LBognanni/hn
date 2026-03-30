@@ -226,8 +226,9 @@ function Story({ story, index, isRead, animate, onOpen }) {
           <span class="pts" dangerouslySetInnerHTML=${{ __html: '&#x25B2; ' + story.score }} />
           <span>${ago(story.time)}</span>
           <span>${story.by}</span>
-          <button class="cmt-btn" onClick=${e => { e.stopPropagation(); onOpen(story.id); }}
-            dangerouslySetInnerHTML=${{ __html: '&#x25CE; ' + story.descendants }} />
+          <button class="cmt-btn">
+            <span>🗨</span> ${ story.descendants } 
+          </button>
         </div>
       </div>
     </div>`;

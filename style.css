@@ -92,14 +92,19 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 11px 14px;
   display: grid;
-  grid-template-columns: 30px 1fr;
+  grid-template-columns: 2ex 1fr;
   gap: 0 9px;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
   animation: fadeUp 0.18s ease both;
 }
 .story:active { background: var(--bg2); }
-.rank { font-size: 0.75rem; color: var(--text3); padding-top: 2px; text-align: right; }
+.rank { 
+  font-size: 0.75rem; 
+  color: var(--text3); 
+  padding-top: 2px; 
+  text-align: center; 
+}
 .s-title {
   font-family: var(--serif);
   font-size: 1.08rem;
@@ -129,6 +134,10 @@ body {
   font-family: var(--mono); font-size: 0.72rem;
   color: var(--link); cursor: pointer; padding: 0;
   -webkit-tap-highlight-color: transparent;
+  font-variant-emoji: text;
+  span {
+    opacity: 0.6;
+  }
 }
 .cmt-btn:active { color: var(--accent); }
 .dot {
