@@ -1,19 +1,19 @@
 # HN Reader — PWA
 
-A lean, battery-efficient Hacker News PWA for Android. Designed to be installed via Firefox so links open in the browser with its adblocker intact.
+A lean, battery-efficient Hacker News PWA for mobile.
 
 ## Project structure
 
 ```
-index.html      — markup only
+index.html      — minimal shell with <div id="app"> mount point
 style.css       — all styles
-app.js          — all application logic
+app.js          — Preact ES module (components, reducer, mount)
 sw.js           — service worker
 manifest.json   — PWA manifest for home screen installation
 CLAUDE.md       — this file
 ```
 
-No build step, no bundler, no dependencies to install.
+No build step, no bundler, no dependencies to install. Preact and htm are loaded from esm.sh CDN as ES modules.
 
 ## How to run locally
 
@@ -50,24 +50,51 @@ Once live over HTTPS, open in Firefox for Android → three-dot menu → "Instal
 
 Both APIs are fully public, no auth required. Algolia was chosen over the Firebase API because it returns complete data in a single request.
 
+### UI framework
+
+Preact (~3KB) with htm (~1KB) for tagged template literals. Loaded as ES modules from `esm.sh` CDN — no build step needed.
+
+### Component tree
+
+```
+App
+ ├── PullToRefresh
+ ├── Feed
+ │    ├── Status (loading/error/empty)
+ │    └── Story[]
+ ├── Overlay
+ ├── Drawer
+ │    └── CommentList
+ │         └── Comment[]
+ ├── Header (bottom bar with DateNav)
+ └── OfflineToast
+```
+
+### State management
+
+Single `useReducer` in `App` with actions: `SET_DAY`, `LOAD_START`, `LOAD_CACHED`, `LOAD_SUCCESS`, `LOAD_FAIL`, `MARK_READ`, `OPEN_DRAWER`, `SET_DRAWER_STORY`, `SET_COMMENTS`, `CLOSE_DRAWER`, `FLASH_OFFLINE`.
+
+A `loadGeneration` counter prevents stale fetches from overwriting current data during rapid navigation.
+
 ### Data flow
 
 **Stories:**
 1. Fetch stories for the current UTC calendar day via Algolia time-range filter
 2. Sort client-side by `num_comments` descending
-3. Render to DOM; cache result in `localStorage` keyed by date (`hn3_s_YYYY-MM-DD`)
+3. Preact re-renders the Feed component; cache result in `localStorage` keyed by date (`hn3_s_YYYY-MM-DD`)
 
 **Comments:**
 1. Algolia `search?tags=comment,story_{id}&hitsPerPage=500` → flat array
 2. Build `childrenOf` map (parent_id → children)
 3. DFS walk from story root to reconstruct thread order and compute depths
-4. Render flat list with CSS `--d` custom property controlling indentation
+4. Render via CommentList component with CSS `--d` custom property controlling indentation
+5. Comment collapse tracked as a `Set<commentId>` in CommentList state; collapsed subtrees are filtered during render
 
 ### Offline / caching
 
 Stories are cached in `localStorage`. On load, the cache renders immediately while a fresh fetch runs in the background. If offline, the cache is used silently and an offline badge is shown.
 
-`sw.js` caches the app shell (`index.html`, `style.css`, `app.js`) and Google Fonts. Algolia API calls are never intercepted.
+`sw.js` caches the app shell (`index.html`, `style.css`, `app.js`), Google Fonts, and Preact/htm from esm.sh. Algolia API calls are never intercepted.
 
 ### localStorage keys
 

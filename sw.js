@@ -1,4 +1,4 @@
-const V = 'hn-v4';
+const V = 'hn-v5';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (u.hostname.includes('algolia')) return;
-  if (u.hostname.includes('gstatic') || u.hostname.includes('googleapis')) {
+  if (u.hostname.includes('gstatic') || u.hostname.includes('googleapis') || u.hostname.includes('esm.sh')) {
     e.respondWith(
       caches.open(V).then(c =>
         c.match(e.request).then(h => h || fetch(e.request).then(r => {
