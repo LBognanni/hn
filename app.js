@@ -148,7 +148,7 @@ window.storyClick = (e, id) => {
   openComments(e, id);
 };
 
-window.openComments = async (e, id) => {
+window.openComments = async (e, id, pushHistory = true) => {
   if (e) e.stopPropagation();
   markRead(id);
   const s = stories.find(x => x.id === id);
@@ -167,7 +167,7 @@ window.openComments = async (e, id) => {
     dLink.style.display = 'none';
   }
   dScroll.innerHTML = '<div id="c-loading">loading comments\u2026</div>';
-  openDrawer(id);
+  openDrawer(id, pushHistory);
 
   try {
     const url  = `${ALGOLIA}/search?tags=comment,story_${id}&hitsPerPage=500`;
@@ -234,11 +234,32 @@ window.tog = (el, e) => {
   }
 };
 
-const openDrawer = id => {
+const parseHash = () => {
+  const h = location.hash.slice(1);
+  if (!h) return {date: null, storyId: null};
+  const parts = h.split('/');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+    return {date: parts[0], storyId: parts[1] ? parseInt(parts[1]) : null};
+  }
+  // legacy: bare story id
+  return {date: null, storyId: parseInt(parts[0]) || null};
+};
+
+const dateHash = (day, storyId) => {
+  const d = dateKey(day);
+  return storyId ? `${d}/${storyId}` : d;
+};
+
+const openDrawer = (id, pushHistory = true) => {
   drawer.classList.add('open');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (id) history.pushState({storyId: id}, '', '#' + id);
+  if (id && pushHistory) {
+    history.pushState({storyId: id}, '', '#' + dateHash(currentDay, id));
+    drawerOwnsHistory = true;
+  } else {
+    drawerOwnsHistory = false;
+  }
 };
 const closeDrawer = () => {
   drawer.classList.remove('open');
@@ -246,12 +267,13 @@ const closeDrawer = () => {
   document.body.style.overflow = '';
 };
 const dismissDrawer = () => {
-  if (location.hash) history.back();
+  if (drawerOwnsHistory) history.back();
   else closeDrawer();
 };
 dClose.addEventListener('click', dismissDrawer);
 overlay.addEventListener('click', dismissDrawer);
 
+let drawerOwnsHistory = false;
 let tsY = 0;
 drawer.addEventListener('touchstart', e => { tsY = e.touches[0].clientY; }, {passive:true});
 drawer.addEventListener('touchend', e => {
@@ -261,12 +283,14 @@ drawer.addEventListener('touchend', e => {
 btnPrev.addEventListener('click', () => {
   currentDay = new Date(currentDay.getTime() - 86400000);
   stories = [];
+  history.pushState({date: dateKey(currentDay)}, '', '#' + dateKey(currentDay));
   load();
 });
 btnNext.addEventListener('click', () => {
   if (btnNext.disabled) return;
   currentDay = new Date(currentDay.getTime() + 86400000);
   stories = [];
+  history.pushState({date: dateKey(currentDay)}, '', '#' + dateKey(currentDay));
   load();
 });
 
@@ -307,18 +331,33 @@ const flashOffline = () => {
 window.addEventListener('offline', flashOffline);
 
 const openFromHash = () => {
-  const id = parseInt(location.hash.slice(1));
-  if (id) openComments(null, id);
+  const {storyId} = parseHash();
+  if (storyId) openComments(null, storyId, false);
 };
 
 window.addEventListener('popstate', () => {
-  const id = parseInt(location.hash.slice(1));
-  if (id) openComments(null, id);
-  else closeDrawer();
+  const {date, storyId} = parseHash();
+  const newDay = date ? new Date(date + 'T00:00:00Z') : todayUTC();
+  if (dateKey(newDay) !== dateKey(currentDay)) {
+    currentDay = newDay;
+    stories = [];
+    closeDrawer();
+    load();
+  } else if (storyId) {
+    openComments(null, storyId);
+  } else {
+    closeDrawer();
+  }
 });
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(console.error);
+}
+
+const {date: initDate} = parseHash();
+if (initDate) {
+  const d = new Date(initDate + 'T00:00:00Z');
+  if (d <= todayUTC()) currentDay = d;
 }
 
 load().then(openFromHash);
