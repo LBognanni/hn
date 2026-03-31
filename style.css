@@ -228,6 +228,29 @@ body {
   padding-bottom: calc(20px + var(--safe-bot));
 }
 
+/* STORY TEXT */
+.story-text {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--text);
+  word-break: break-word;
+}
+.story-text a { color: var(--link); }
+.story-text pre, .story-text code {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); font-family: var(--mono);
+  font-size: 0.7rem;
+}
+.story-text pre { padding: 7px; overflow-x: auto; margin: 5px 0; }
+.story-text code { padding: 1px 4px; }
+.story-text p { margin-bottom: 4px; }
+.story-text p:last-child { margin: 0; }
+
 /* COMMENTS */
 .comment {
   padding: 8px 14px;

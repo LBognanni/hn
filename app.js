@@ -89,6 +89,7 @@ const fetchStories = async (day) => {
     id:          parseInt(h.objectID),
     title:       h.title || '(untitled)',
     url:         h.url   || null,
+    text:        h.story_text || null,
     score:       h.points || 0,
     by:          h.author || '',
     time:        h.created_at_i || 0,
@@ -135,6 +136,7 @@ const fetchStoryItem = async (id) => {
     id:          item.id,
     title:       item.title || '(untitled)',
     url:         item.url   || null,
+    text:        item.text  || null,
     score:       item.points || 0,
     by:          item.author || '',
     time:        item.created_at_i || 0,
@@ -371,6 +373,9 @@ function Drawer({ storyId, story, comments, onClose, onOpenStory, drawerRef }) {
           ${'\u2197 ' + (d || 'open article')}
         </a>` : null}
       <div id="d-scroll">
+        ${story.text ? html`
+          <div class="story-text" dangerouslySetInnerHTML=${{ __html: story.text }} />
+        ` : null}
         <${CommentList} comments=${comments} storyId=${storyId} onOpenStory=${onOpenStory} />
       </div>
     </div>`;
