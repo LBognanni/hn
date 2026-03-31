@@ -34,6 +34,17 @@ const host = url => {
   catch { return ''; }
 };
 
+const hnItemId = url => {
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'news.ycombinator.com' && u.pathname === '/item') {
+      const id = parseInt(u.searchParams.get('id'));
+      if (id) return id;
+    }
+  } catch {}
+  return null;
+};
+
 // ── LocalStorage helpers ────────────────────────────────────────────
 
 const cacheSet = (k, v) => {
@@ -278,7 +289,7 @@ function Comment({ comment, collapsed, onToggle }) {
     </div>`;
 }
 
-function CommentList({ comments, storyId }) {
+function CommentList({ comments, storyId, onOpenStory }) {
   const [collapsed, setCollapsed] = useState(() => loadCollapsed(storyId));
 
   // Load persisted collapsed state when story changes
@@ -319,13 +330,22 @@ function CommentList({ comments, storyId }) {
     if (collapsed.has(c.id)) collapsedDepths.push([c.id, c.depth]);
   }
 
-  return html`${visible.map(c => html`
+  const handleClick = useCallback(e => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const id = hnItemId(a.href);
+    if (!id) return;
+    e.preventDefault();
+    onOpenStory(id);
+  }, [onOpenStory]);
+
+  return html`<div onClick=${handleClick}>${visible.map(c => html`
     <${Comment} key=${c.id} comment=${c}
                 collapsed=${collapsed.has(c.id)} onToggle=${toggle} />
-  `)}`;
+  `)}</div>`;
 }
 
-function Drawer({ storyId, story, comments, onClose, drawerRef }) {
+function Drawer({ storyId, story, comments, onClose, onOpenStory, drawerRef }) {
   if (!story) {
     return html`
       <div id="drawer" ref=${drawerRef}>
@@ -351,7 +371,7 @@ function Drawer({ storyId, story, comments, onClose, drawerRef }) {
           ${'\u2197 ' + (d || 'open article')}
         </a>` : null}
       <div id="d-scroll">
-        <${CommentList} comments=${comments} storyId=${storyId} />
+        <${CommentList} comments=${comments} storyId=${storyId} onOpenStory=${onOpenStory} />
       </div>
     </div>`;
 }
@@ -612,7 +632,7 @@ function App() {
     <div id="overlay" class=${drawerStoryId ? 'open' : ''} onClick=${dismissDrawer} />
     <${Drawer} storyId=${drawerStoryId} story=${drawerStory}
                comments=${comments} onClose=${dismissDrawer}
-               drawerRef=${drawerRef} />
+               onOpenStory=${openStory} drawerRef=${drawerRef} />
     <${Header} currentDay=${currentDay} onPrev=${() => navigate(-1)} onNext=${() => navigate(1)} />
     <${OfflineToast} show=${offlineFlash} />
   `;
