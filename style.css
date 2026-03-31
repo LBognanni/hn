@@ -246,7 +246,7 @@ body {
   border-radius: var(--r); font-family: var(--mono);
   font-size: 0.7rem;
 }
-.story-text pre { padding: 7px; overflow-x: auto; margin: 5px 0; }
+.story-text pre { padding: 7px; overflow-x: auto; margin: 5px 0; white-space: pre-wrap; }
 .story-text code { padding: 1px 4px; }
 .story-text p { margin-bottom: 4px; }
 .story-text p:last-child { margin: 0; }
@@ -292,7 +292,7 @@ body {
   border-radius: var(--r); font-family: var(--mono);
   font-size: 0.7rem;
 }
-.c-body pre { padding: 7px; overflow-x: auto; margin: 5px 0; }
+.c-body pre { padding: 7px; overflow-x: auto; margin: 5px 0; white-space: pre-wrap; }
 .c-body code { padding: 1px 4px; }
 .c-body p { margin-bottom: 4px; }
 .c-body p:last-child { margin: 0; }
