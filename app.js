@@ -9,9 +9,11 @@ const ALGOLIA   = 'https://hn.algolia.com/api/v1';
 const CACHE_PFX     = 'hn3_';
 const READ_KEY      = 'hn3_read';
 const COLLAPSED_PFX = 'hn3_col_';
+const STORY_PFX     = 'hn3_s_';
 const DAY_MS        = 86400000;
 const DAY_S         = 86400;
 const COLLAPSED_TTL = 7 * DAY_MS;
+const STORY_TTL     = 3 * DAY_MS;
 
 const todayUTC = () => {
   const d = new Date();
@@ -47,8 +49,27 @@ const hnItemId = url => {
 
 // ── LocalStorage helpers ────────────────────────────────────────────
 
+// Drop story caches that are untimestamped or older than STORY_TTL.
+// Only invoked when localStorage is full, to reclaim space before retrying.
+const pruneStoryCaches = () => {
+  const now = Date.now();
+  for (const k of Object.keys(localStorage)) {
+    if (!k.startsWith(STORY_PFX)) continue;
+    let drop = true;
+    try {
+      const v = JSON.parse(localStorage.getItem(k));
+      drop = !v?.cached_at || now - v.cached_at > STORY_TTL;
+    } catch {}
+    if (drop) localStorage.removeItem(k);
+  }
+};
 const cacheSet = (k, v) => {
-  try { localStorage.setItem(CACHE_PFX + k, JSON.stringify(v)); } catch {}
+  const json = JSON.stringify(v);
+  try { localStorage.setItem(CACHE_PFX + k, json); }
+  catch {
+    pruneStoryCaches();
+    try { localStorage.setItem(CACHE_PFX + k, json); } catch {}
+  }
 };
 const cacheGet = k => {
   try { return JSON.parse(localStorage.getItem(CACHE_PFX + k)); }
@@ -438,14 +459,15 @@ function App() {
   const load = useCallback(async (day, generation) => {
     dispatch({ type: 'LOAD_START' });
     const key    = 's_' + dateKey(day);
-    const cached = cacheGet(key);
+    const stored = cacheGet(key);
+    const cached = Array.isArray(stored) ? stored : stored?.stories ?? null;
     if (cached) {
       animateRef.current = false;
       dispatch({ type: 'LOAD_CACHED', stories: cached, generation });
     }
     try {
       const fresh = await fetchStories(day);
-      cacheSet(key, fresh);
+      cacheSet(key, { stories: fresh, cached_at: Date.now() });
       if (!cached) animateRef.current = true;
       dispatch({ type: 'LOAD_SUCCESS', stories: fresh, generation });
     } catch (err) {
@@ -642,5 +664,9 @@ function App() {
     <${OfflineToast} show=${offlineFlash} />
   `;
 }
+
+// Ask the browser not to evict our localStorage under storage pressure.
+// Mobile Chrome treats storage as clearable unless an origin is marked persistent.
+navigator.storage?.persist?.();
 
 render(html`<${App} />`, document.getElementById('app'));
